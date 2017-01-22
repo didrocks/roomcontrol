@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"os/signal"
 	"sync"
@@ -28,9 +27,15 @@ func main() {
 
 	temps, hums := startMesTempAndHum(g, wg, quit)
 	var tempListeners []chan float32
+	var humListeners []chan float32
 
 	tempListeners, t := newlistener(tempListeners)
 	startLogger(t, wg, quit)
+
+	// LCD screen display.
+	tempListeners, t = newlistener(tempListeners)
+	humListeners, h := newlistener(humListeners)
+	startDisplay(t, h, wg, quit)
 
 	// Values multipler.
 	wg.Add(1)
@@ -43,8 +48,9 @@ func main() {
 					l <- t
 				}
 			case h := <-hums:
-				fmt.Print("humidity is ")
-				fmt.Println(h)
+				for _, l := range humListeners {
+					l <- h
+				}
 			case <-quit:
 				return
 			}
@@ -58,6 +64,9 @@ func main() {
 		close(l)
 	}
 
+	for _, l := range humListeners {
+		close(l)
+	}
 }
 
 func newlistener(listner []chan float32) ([]chan float32, chan float32) {
