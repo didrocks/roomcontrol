@@ -27,6 +27,7 @@ func main() {
 	}()
 
 	temps, hums := startMesTempAndHum(g, wg, quit)
+	var tempListeners []chan float32
 
 	// Values multipler.
 	wg.Add(1)
@@ -35,8 +36,9 @@ func main() {
 		for {
 			select {
 			case t := <-temps:
-				fmt.Print("temperature is")
-				fmt.Println(t)
+				for _, l := range tempListeners {
+					l <- t
+				}
 			case h := <-hums:
 				fmt.Print("humidity is ")
 				fmt.Println(h)
@@ -48,6 +50,11 @@ func main() {
 	}()
 
 	wg.Wait()
+
+	for _, l := range tempListeners {
+		close(l)
+	}
+
 }
 
 func newlistener(listner []chan float32) ([]chan float32, chan float32) {
