@@ -25,6 +25,14 @@ func startMesTempAndHum(g grovepi.GrovePi, wg *sync.WaitGroup, quit <-chan struc
 		nHum := 0
 		tSent, hSent := false, false
 		for {
+
+			// Immediate exit if requested.
+			select {
+			case <-quit:
+				return
+			default:
+			}
+
 			t, h, err := g.ReadDHT(grovepi.D4)
 			// Ignore invalid temp and humidity.
 			if err != nil {
@@ -62,13 +70,6 @@ func startMesTempAndHum(g grovepi.GrovePi, wg *sync.WaitGroup, quit <-chan struc
 					return
 				case <-time.After(5 * time.Minute):
 				}
-			}
-
-			// Normal immediate exit if requested.
-			select {
-			case <-quit:
-				return
-			default:
 			}
 
 		}
