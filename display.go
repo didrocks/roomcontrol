@@ -30,6 +30,16 @@ func startDisplay(temps <-chan float32, humids <-chan float32, wg *sync.WaitGrou
 
 		var mainloop = func() {
 			screen := d.screen
+
+			// Tear down LCD by erasing and clearing the screen.
+			defer func() {
+				screen.SetRGB(0, 0, 0)
+				screen.Clear()
+				d.r.Stop()
+				// wait for some millisecond for the robot to send pending commands
+				time.Sleep(100 * time.Millisecond)
+			}()
+
 			screen.Clear()
 
 			for {
@@ -42,11 +52,7 @@ func startDisplay(temps <-chan float32, humids <-chan float32, wg *sync.WaitGrou
 					screen.Home()
 					screen.Write(fmt.Sprintf("\nHum :  %.0f%%", h))
 				case <-quit:
-					d.screen.SetRGB(0, 0, 0)
 					d.screen.Clear()
-					d.r.Stop()
-					// wait for a millisecond for the robot to send pending commands
-					time.Sleep(100 * time.Millisecond)
 					return
 				}
 			}
