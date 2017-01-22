@@ -2,6 +2,7 @@ package main
 
 import (
 	"image/color"
+	"math"
 	"sync"
 
 	"fmt"
@@ -9,6 +10,14 @@ import (
 	"gobot.io/x/gobot"
 	"gobot.io/x/gobot/drivers/i2c"
 	"gobot.io/x/gobot/platforms/chip"
+)
+
+const tempColorNorm = 19.0
+
+var (
+	colorMax  = color.RGBA{255, 62, 0, 0}
+	colorNorm = color.RGBA{96, 129, 5, 0}
+	colorMin  = color.RGBA{116, 106, 255, 0}
 )
 
 type display struct {
@@ -45,6 +54,8 @@ func startDisplay(temps <-chan float32, humids <-chan float32, wg *sync.WaitGrou
 				case t := <-temps:
 					screen.Home()
 					screen.Write(fmt.Sprintf("Temp : %.1fC", t))
+					c := d.evaluateTemp(float64(t))
+					fmt.Println(c)
 					d.updateColor()
 				case h := <-humids:
 					screen.Home()
@@ -67,6 +78,37 @@ func startDisplay(temps <-chan float32, humids <-chan float32, wg *sync.WaitGrou
 		d.r.Start(false)
 		<-workDone
 	}()
+}
+
+// evaluateTemp based on Norm. Signal if any deficiency and update current color
+// we have a gradient of 1 degree.
+func (d *display) evaluateTemp(t float64) bool {
+	proRata := t - tempColorNorm
+	tempOk := true
+	if proRata > 2.0 || proRata < -1.5 {
+		tempOk = false
+	}
+	proRata = math.Min(math.Max(proRata, -1), 1)
+
+	// Temp superior to norm
+	if proRata > 0 {
+		d.curColor = color.RGBA{
+			uint8(float64(colorNorm.R) + proRata*(float64(int(colorMax.R)-int(colorNorm.R)))),
+			uint8(float64(colorNorm.G) + proRata*(float64(int(colorMax.G)-int(colorNorm.G)))),
+			uint8(float64(colorNorm.B) + proRata*(float64(int(colorMax.B)-int(colorNorm.B)))),
+			0,
+		}
+	} else {
+		d.curColor = color.RGBA{
+			uint8(float64(colorNorm.R) - proRata*(float64(int(colorMin.R)-int(colorNorm.R)))),
+			uint8(float64(colorNorm.G) - proRata*(float64(int(colorMin.G)-int(colorNorm.G)))),
+			uint8(float64(colorNorm.B) - proRata*(float64(int(colorMin.B)-int(colorNorm.B)))),
+			0,
+		}
+
+	}
+
+	return tempOk
 }
 
 func (d *display) updateColor() {
