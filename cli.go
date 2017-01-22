@@ -43,7 +43,8 @@ func main() {
 	// LCD screen display.
 	tempListeners, t = newlistener(tempListeners)
 	humListeners, h := newlistener(humListeners)
-	startDisplay(t, h, wg, quit)
+	buttonListeners, b := newbuttonlistener(buttonListeners)
+	startDisplay(t, h, b, wg, quit)
 
 	// Values multipler.
 	wg.Add(1)

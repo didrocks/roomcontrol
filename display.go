@@ -27,9 +27,9 @@ type display struct {
 	r        *gobot.Robot
 }
 
-func startDisplay(temps <-chan float32, humids <-chan float32, wg *sync.WaitGroup, quit <-chan struct{}) {
+func startDisplay(temps <-chan float32, humids <-chan float32, bEvents <-chan ButtonEvent, wg *sync.WaitGroup, quit <-chan struct{}) {
 	wg.Add(1)
-	d := display{}
+	d := display{colorOn: true}
 
 	workDone := make(chan struct{})
 
@@ -60,6 +60,11 @@ func startDisplay(temps <-chan float32, humids <-chan float32, wg *sync.WaitGrou
 				case h := <-humids:
 					screen.Home()
 					screen.Write(fmt.Sprintf("\nHum :  %.0f%%", h))
+				case e := <-bEvents:
+					if e == DOUBLECLICK {
+						d.colorOn = !d.colorOn
+						d.updateColor()
+					}
 				case <-quit:
 					close(workDone)
 					return
