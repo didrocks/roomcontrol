@@ -28,10 +28,17 @@ func main() {
 	temps, hums := startMesTempAndHum(g, wg, quit)
 	var tempListeners []chan float32
 	var humListeners []chan float32
+	var buttonListeners []chan ButtonEvent
 
 	// Disk loggers.
 	tempListeners, t := newlistener(tempListeners)
 	startLogger(t, wg, quit)
+
+	// Listen on button.
+	bEvents, err := startButtonListener(g, wg, quit)
+	if err != nil {
+		panic(err)
+	}
 
 	// LCD screen display.
 	tempListeners, t = newlistener(tempListeners)
@@ -52,6 +59,10 @@ func main() {
 				for _, l := range humListeners {
 					l <- h
 				}
+			case e := <-bEvents:
+				for _, l := range buttonListeners {
+					l <- e
+				}
 			case <-quit:
 				return
 			}
@@ -68,11 +79,21 @@ func main() {
 	for _, l := range humListeners {
 		close(l)
 	}
+	for _, l := range buttonListeners {
+		close(l)
+	}
 }
 
 func newlistener(listner []chan float32) ([]chan float32, chan float32) {
 	t := make(chan float32)
 	listner = append(listner, t)
 
-	return listner, t
+	return listener, t
+}
+
+func newbuttonlistener(listener []chan ButtonEvent) ([]chan ButtonEvent, chan ButtonEvent) {
+	t := make(chan ButtonEvent)
+	listener = append(listener, t)
+
+	return listener, t
 }
