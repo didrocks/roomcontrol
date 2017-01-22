@@ -29,6 +29,9 @@ func main() {
 	temps, hums := startMesTempAndHum(g, wg, quit)
 	var tempListeners []chan float32
 
+	tempListeners, t := newlistener(tempListeners)
+	startLogger(t, wg, quit)
+
 	// Values multipler.
 	wg.Add(1)
 	go func() {
