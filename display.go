@@ -3,7 +3,6 @@ package main
 import (
 	"image/color"
 	"sync"
-	"time"
 
 	"fmt"
 
@@ -23,23 +22,22 @@ func startDisplay(temps <-chan float32, humids <-chan float32, wg *sync.WaitGrou
 	wg.Add(1)
 	d := display{}
 
+	workDone := make(chan struct{})
+
 	go func() {
 		defer wg.Done()
 		board := chip.NewAdaptor()
 		d.screen = i2c.NewGroveLcdDriver(board)
 
+		// Tear down LCD by erasing and clearing the screen.
+		defer func() {
+			d.screen.SetRGB(0, 0, 0)
+			d.screen.Clear()
+			d.r.Stop()
+		}()
+
 		var mainloop = func() {
 			screen := d.screen
-
-			// Tear down LCD by erasing and clearing the screen.
-			defer func() {
-				screen.SetRGB(0, 0, 0)
-				screen.Clear()
-				d.r.Stop()
-				// wait for some milliseconds for the robot to send pending commands
-				time.Sleep(100 * time.Millisecond)
-			}()
-
 			screen.Clear()
 
 			for {
@@ -52,7 +50,7 @@ func startDisplay(temps <-chan float32, humids <-chan float32, wg *sync.WaitGrou
 					screen.Home()
 					screen.Write(fmt.Sprintf("\nHum :  %.0f%%", h))
 				case <-quit:
-					d.screen.Clear()
+					close(workDone)
 					return
 				}
 			}
@@ -67,6 +65,7 @@ func startDisplay(temps <-chan float32, humids <-chan float32, wg *sync.WaitGrou
 
 		// We don't want gobot to handle SIGINT and quit itself.
 		d.r.Start(false)
+		<-workDone
 	}()
 }
 
