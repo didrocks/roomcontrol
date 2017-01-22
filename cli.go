@@ -76,7 +76,6 @@ func main() {
 	for _, l := range tempListeners {
 		close(l)
 	}
-
 	for _, l := range humListeners {
 		close(l)
 	}
@@ -85,9 +84,9 @@ func main() {
 	}
 }
 
-func newlistener(listner []chan float32) ([]chan float32, chan float32) {
+func newlistener(listener []chan float32) ([]chan float32, chan float32) {
 	t := make(chan float32)
-	listner = append(listner, t)
+	listener = append(listener, t)
 
 	return listener, t
 }
