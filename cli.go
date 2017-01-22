@@ -48,5 +48,11 @@ func main() {
 	}()
 
 	wg.Wait()
+}
 
+func newlistener(listner []chan float32) ([]chan float32, chan float32) {
+	t := make(chan float32)
+	listner = append(listner, t)
+
+	return listner, t
 }
