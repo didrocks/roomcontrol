@@ -36,7 +36,7 @@ func startDisplay(temps <-chan float32, humids <-chan float32, wg *sync.WaitGrou
 				screen.SetRGB(0, 0, 0)
 				screen.Clear()
 				d.r.Stop()
-				// wait for some millisecond for the robot to send pending commands
+				// wait for some milliseconds for the robot to send pending commands
 				time.Sleep(100 * time.Millisecond)
 			}()
 
@@ -65,6 +65,7 @@ func startDisplay(temps <-chan float32, humids <-chan float32, wg *sync.WaitGrou
 			mainloop,
 		)
 
+		// We don't want gobot to handle SIGINT and quit itself.
 		d.r.Start(false)
 	}()
 }

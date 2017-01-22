@@ -29,6 +29,7 @@ func main() {
 	var tempListeners []chan float32
 	var humListeners []chan float32
 
+	// Disk loggers.
 	tempListeners, t := newlistener(tempListeners)
 	startLogger(t, wg, quit)
 
