@@ -17,8 +17,9 @@ const (
 	// DOUBLE button clic
 	DOUBLECLICK
 
-	pin             = grovepi.D8
-	doubleClickTime = time.Second
+	pin               = grovepi.D8
+	doubleClickTime   = time.Second
+	defaultResolution = 100 * time.Millisecond
 )
 
 func startButtonListener(g grovepi.GrovePi, wg *sync.WaitGroup, quit <-chan struct{}) (<-chan ButtonEvent, error) {
@@ -36,10 +37,11 @@ func startButtonListener(g grovepi.GrovePi, wg *sync.WaitGroup, quit <-chan stru
 		inClick := false
 		var firstClick time.Time
 		var singleClickTimeout *time.Timer
+		res := defaultResolution
 
 		for {
 			select {
-			case <-time.After(100 * time.Millisecond):
+			case <-time.After(res):
 				val, err := g.DigitalRead(pin)
 				if val == 1 {
 					// Can be first or second click.
@@ -48,14 +50,17 @@ func startButtonListener(g grovepi.GrovePi, wg *sync.WaitGroup, quit <-chan stru
 						// First click.
 						if time.Now().Sub(firstClick) > doubleClickTime {
 							firstClick = time.Now()
+							res = 10 * time.Millisecond
 							singleClickTimeout = time.AfterFunc(doubleClickTime, func() {
 								// It was only a single click.
 								ev <- SINGLECLICK
+								res = defaultResolution
 							})
 						} else {
 							// Double click event, fire away!
 							singleClickTimeout.Stop()
 							ev <- DOUBLECLICK
+							res = defaultResolution
 						}
 					}
 				} else {
