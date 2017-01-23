@@ -1,6 +1,8 @@
 package main
 
 import (
+	"io/ioutil"
+	"log"
 	"os"
 	"os/signal"
 	"sync"
@@ -10,6 +12,9 @@ import (
 )
 
 func main() {
+
+	// Disable logging for now.
+	log.SetOutput(ioutil.Discard)
 
 	g := *grovepi.InitGrovePi(0x04)
 	defer g.CloseDevice()

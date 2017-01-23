@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -67,7 +67,7 @@ func startButtonListener(g grovepi.GrovePi, wg *sync.WaitGroup, quit <-chan stru
 					inClick = false
 				}
 				if err != nil {
-					fmt.Println("Button read error")
+					log.Println("Button read error")
 				}
 			case <-quit:
 				return
