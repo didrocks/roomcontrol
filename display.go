@@ -61,7 +61,7 @@ func startDisplay(temps <-chan float32, humids <-chan float32, bEvents <-chan Bu
 					screen.Home()
 					screen.Write(fmt.Sprintf("\nHum :  %.0f%%", h))
 				case e := <-bEvents:
-					if e == DOUBLECLICK {
+					if e == SINGLECLICK {
 						d.colorOn = !d.colorOn
 						d.updateColor()
 					}
