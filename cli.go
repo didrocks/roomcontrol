@@ -36,8 +36,15 @@ func main() {
 	var buttonListeners []chan ButtonEvent
 
 	// Disk loggers.
+	/*tempListeners, t := newlistener(tempListeners)
+	startLogger(t, wg, quit)*/
+
+	// Influxdb logger.
 	tempListeners, t := newlistener(tempListeners)
-	startLogger(t, wg, quit)
+	humListeners, h := newlistener(humListeners)
+	if err := startInfluxDBLogger(t, h, wg, quit); err != nil {
+		log.Printf("InfluxDB connect: %v", err)
+	}
 
 	// Listen on button.
 	bEvents, err := startButtonListener(g, wg, quit)
