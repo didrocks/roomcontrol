@@ -16,6 +16,8 @@ const (
 	SINGLECLICK ButtonEvent = iota
 	// DOUBLECLICK button click
 	DOUBLECLICK
+	// LONGPRESS button click
+	LONGPRESS
 
 	pin               = grovepi.D8
 	doubleClickTime   = time.Second
@@ -52,8 +54,15 @@ func startButtonListener(g grovepi.GrovePi, wg *sync.WaitGroup, quit <-chan stru
 							firstClick = time.Now()
 							res = 10 * time.Millisecond
 							singleClickTimeout = time.AfterFunc(doubleClickTime, func() {
-								// It was only a single click.
-								ev <- SINGLECLICK
+								// Only one click happened
+
+								// If we are still actively clicking, it's a long press
+								if inClick {
+									ev <- LONGPRESS
+								} else {
+									// It was only a single click.
+									ev <- SINGLECLICK
+								}
 								res = defaultResolution
 							})
 						} else {
