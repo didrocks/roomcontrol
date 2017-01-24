@@ -12,9 +12,9 @@ import (
 type ButtonEvent int
 
 const (
-	// SINGLE button clic
+	// SINGLECLICK button click
 	SINGLECLICK ButtonEvent = iota
-	// DOUBLE button clic
+	// DOUBLECLICK button click
 	DOUBLECLICK
 
 	pin               = grovepi.D8
