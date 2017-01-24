@@ -1,0 +1,14 @@
+[Unit]
+Description=Handle Room Control service
+Wants=network-online.target
+After=network-online.target,grafana-server.service,influxd.service
+
+[Service]
+Environment=INFLUXUSER=roomcontrol
+Environment=INFLUXADDR=http://localhost:8086
+Environment=INFLUXPASS=mypassword
+Type=simple
+ExecStart=/usr/local/bin/roomcontrol
+
+[Install]
+WantedBy=multi-user.target
