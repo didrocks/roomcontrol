@@ -19,7 +19,7 @@ const (
 
 	pin               = grovepi.D8
 	doubleClickTime   = time.Second
-	defaultResolution = 100 * time.Millisecond
+	defaultResolution = 50 * time.Millisecond
 )
 
 func startButtonListener(g grovepi.GrovePi, wg *sync.WaitGroup, quit <-chan struct{}) (<-chan ButtonEvent, error) {
