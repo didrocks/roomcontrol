@@ -18,6 +18,8 @@ var (
 	colorMax  = color.RGBA{255, 62, 0, 0}
 	colorNorm = color.RGBA{96, 129, 5, 0}
 	colorMin  = color.RGBA{116, 106, 255, 0}
+	bell      = [...]byte{4, 14, 14, 14, 31, 0, 4, 0}
+	clock     = [...]byte{0, 14, 21, 23, 17, 14, 0, 0}
 )
 
 type display struct {
@@ -69,18 +71,18 @@ func startDisplay(temps <-chan float32, humids <-chan float32, bEvents <-chan Bu
 				case e := <-buzzEnabled:
 					screen.Home()
 					d.screen.SetPosition(15)
-					d.screen.Write(string(byte(0)))
 					if e {
-						d.screen.SetCustomChar(0, i2c.CustomLCDChars["smiley"])
+						d.screen.Write(string(byte(0)))
+						d.screen.SetCustomChar(0, bell)
 					} else {
-						d.screen.SetCustomChar(0, i2c.CustomLCDChars["heart"])
+						d.screen.Write(" ")
 					}
 				case td := <-buzzTempDisabled:
 					screen.Home()
 					d.screen.SetPosition(31)
 					if td {
 						d.screen.Write(string(byte(1)))
-						d.screen.SetCustomChar(1, i2c.CustomLCDChars["heart"])
+						d.screen.SetCustomChar(1, clock)
 					} else {
 						d.screen.Write(" ")
 					}
