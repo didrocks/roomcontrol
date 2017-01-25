@@ -27,7 +27,7 @@ type display struct {
 	r        *gobot.Robot
 }
 
-func startDisplay(temps <-chan float32, humids <-chan float32, bEvents <-chan ButtonEvent, wg *sync.WaitGroup, quit <-chan struct{}) {
+func startDisplay(temps <-chan float32, humids <-chan float32, bEvents <-chan ButtonEvent, buzzEnabled <-chan bool, buzzTempDisabled <-chan bool, tempOk chan<- bool, wg *sync.WaitGroup, quit <-chan struct{}) {
 	wg.Add(1)
 	d := display{colorOn: true}
 
@@ -55,15 +55,34 @@ func startDisplay(temps <-chan float32, humids <-chan float32, bEvents <-chan Bu
 					screen.Home()
 					screen.Write(fmt.Sprintf("Temp : %.1fC", t))
 					c := d.evaluateTemp(float64(t))
-					fmt.Println(c)
+					tempOk <- c
 					d.updateColor()
 				case h := <-humids:
 					screen.Home()
-					screen.Write(fmt.Sprintf("\nHum :  %.0f%%", h))
+					d.screen.SetPosition(16)
+					screen.Write(fmt.Sprintf("Hum :  %.0f%%", h))
 				case e := <-bEvents:
 					if e == SINGLECLICK {
 						d.colorOn = !d.colorOn
 						d.updateColor()
+					}
+				case e := <-buzzEnabled:
+					screen.Home()
+					d.screen.SetPosition(15)
+					d.screen.Write(string(byte(0)))
+					if e {
+						d.screen.SetCustomChar(0, i2c.CustomLCDChars["smiley"])
+					} else {
+						d.screen.SetCustomChar(0, i2c.CustomLCDChars["heart"])
+					}
+				case td := <-buzzTempDisabled:
+					screen.Home()
+					d.screen.SetPosition(31)
+					if td {
+						d.screen.Write(string(byte(1)))
+						d.screen.SetCustomChar(1, i2c.CustomLCDChars["heart"])
+					} else {
+						d.screen.Write(" ")
 					}
 				case <-quit:
 					close(workDone)
