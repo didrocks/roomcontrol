@@ -57,7 +57,7 @@ func main() {
 	// Buzzer enablement.
 	tempOk := make(chan bool)
 	buttonListeners, b := newbuttonlistener(buttonListeners)
-	buzzEnabled, buzzTempDisabled, err := startBuzzer(tempOk, b, g, wg, quit)
+	buzzMode, buzzTempDisabled, err := startBuzzer(tempOk, b, g, wg, quit)
 	if err != nil {
 		log.Printf("Couldn't connect buzzer: %v", err)
 		return
@@ -67,7 +67,7 @@ func main() {
 	tempListeners, t = newlistener(tempListeners)
 	humListeners, h = newlistener(humListeners)
 	buttonListeners, b = newbuttonlistener(buttonListeners)
-	startDisplay(t, h, b, buzzEnabled, buzzTempDisabled, tempOk, wg, quit)
+	startDisplay(t, h, b, buzzMode, buzzTempDisabled, tempOk, wg, quit)
 
 	// Values multipler.
 	wg.Add(1)

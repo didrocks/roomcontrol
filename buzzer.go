@@ -15,24 +15,36 @@ const (
 	gracePeriod  = 30 * time.Minute
 )
 
-func startBuzzer(tempOK <-chan bool, bEvents <-chan ButtonEvent, g grovepi.GrovePi, wg *sync.WaitGroup, quit <-chan struct{}) (chan bool, chan bool, error) {
+// BuzzMode can be disabled, low or high volume.
+type BuzzMode int
+
+const (
+	// Disabled BuzzMode.
+	Disabled = iota
+	// LowVolume BuzzMode.
+	LowVolume
+	// HighVolume BuzzMode.
+	HighVolume
+)
+
+func startBuzzer(tempOK <-chan bool, bEvents <-chan ButtonEvent, g grovepi.GrovePi, wg *sync.WaitGroup, quit <-chan struct{}) (chan BuzzMode, chan bool, error) {
 
 	if err := g.PinMode(pinBuzz, "OUTPUT"); err != nil {
 		return nil, nil, err
 	}
 
-	buzzEnabled, buzzTempDisabled := make(chan bool), make(chan bool)
+	buzzMode, buzzTempDisabled := make(chan BuzzMode), make(chan bool)
 	wg.Add(1)
 	childWait := sync.WaitGroup{}
 
 	go func() {
 		defer wg.Done()
-		defer buzz(g, false)
+		defer buzz(g, Disabled, false)
 
 		numTempKO := 0
 		buzzOn := false
-		canBuzz := true
-		buzzEnabled <- canBuzz
+		curBuzzMode := BuzzMode(LowVolume)
+		buzzMode <- curBuzzMode
 		tempDisabled := false
 		buzzTempDisabled <- tempDisabled
 
@@ -45,7 +57,7 @@ func startBuzzer(tempOK <-chan bool, bEvents <-chan ButtonEvent, g grovepi.Grove
 				fmt.Println(tOK)
 				if tOK {
 					if buzzOn {
-						buzz(g, false)
+						buzz(g, Disabled, false)
 						buzzOn = false
 					}
 					numTempKO = 0
@@ -62,16 +74,16 @@ func startBuzzer(tempOK <-chan bool, bEvents <-chan ButtonEvent, g grovepi.Grove
 							for {
 								select {
 								case <-buzzTicker.C:
-									if !canBuzz || tempDisabled {
+									if curBuzzMode == Disabled || tempDisabled {
 										continue
 									}
-									buzz(g, true)
+									buzz(g, curBuzzMode, true)
 									time.Sleep(20 * time.Millisecond)
-									buzz(g, false)
+									buzz(g, curBuzzMode, false)
 									time.Sleep(10 * time.Millisecond)
-									buzz(g, true)
+									buzz(g, curBuzzMode, true)
 									time.Sleep(20 * time.Millisecond)
-									buzz(g, false)
+									buzz(g, curBuzzMode, false)
 								case <-quit:
 									return
 								}
@@ -95,8 +107,15 @@ func startBuzzer(tempOK <-chan bool, bEvents <-chan ButtonEvent, g grovepi.Grove
 						buzzTempDisabled <- tempDisabled
 					})
 				} else if e == DOUBLECLICK {
-					canBuzz = !canBuzz
-					buzzEnabled <- canBuzz
+					switch curBuzzMode {
+					case Disabled:
+						curBuzzMode = LowVolume
+					case LowVolume:
+						curBuzzMode = HighVolume
+					case HighVolume:
+						curBuzzMode = Disabled
+					}
+					buzzMode <- curBuzzMode
 				}
 
 			case <-quit:
@@ -107,15 +126,20 @@ func startBuzzer(tempOK <-chan bool, bEvents <-chan ButtonEvent, g grovepi.Grove
 		}
 	}()
 
-	return buzzEnabled, buzzTempDisabled, nil
+	return buzzMode, buzzTempDisabled, nil
 }
 
-func buzz(g grovepi.GrovePi, on bool) {
+func buzz(g grovepi.GrovePi, b BuzzMode, on bool) {
 	beep := byte(0)
 	if on {
-		beep = 1
+		switch b {
+		case LowVolume:
+			beep = 1
+		case HighVolume:
+			beep = 10
+		}
 	}
-	if err := g.DigitalWrite(pinBuzz, beep); err != nil {
+	if err := g.AnalogWrite(pinBuzz, beep); err != nil {
 		log.Printf("Couldn't set buzz to %d: %v", beep, err)
 	}
 }

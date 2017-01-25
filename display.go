@@ -18,7 +18,8 @@ var (
 	colorMax  = color.RGBA{255, 62, 0, 0}
 	colorNorm = color.RGBA{96, 129, 5, 0}
 	colorMin  = color.RGBA{116, 106, 255, 0}
-	bell      = [...]byte{4, 14, 14, 14, 31, 0, 4, 0}
+	bell      = [...]byte{4, 14, 14, 14, 31, 4, 0, 0}
+	bellloud  = [...]byte{21, 14, 14, 14, 31, 4, 17, 0}
 	clock     = [...]byte{0, 14, 21, 23, 17, 14, 0, 0}
 )
 
@@ -29,7 +30,7 @@ type display struct {
 	r        *gobot.Robot
 }
 
-func startDisplay(temps <-chan float32, humids <-chan float32, bEvents <-chan ButtonEvent, buzzEnabled <-chan bool, buzzTempDisabled <-chan bool, tempOk chan<- bool, wg *sync.WaitGroup, quit <-chan struct{}) {
+func startDisplay(temps <-chan float32, humids <-chan float32, bEvents <-chan ButtonEvent, buzzMode <-chan BuzzMode, buzzTempDisabled <-chan bool, tempOk chan<- bool, wg *sync.WaitGroup, quit <-chan struct{}) {
 	wg.Add(1)
 	d := display{colorOn: true}
 
@@ -68,14 +69,18 @@ func startDisplay(temps <-chan float32, humids <-chan float32, bEvents <-chan Bu
 						d.colorOn = !d.colorOn
 						d.updateColor()
 					}
-				case e := <-buzzEnabled:
+				case e := <-buzzMode:
 					screen.Home()
 					d.screen.SetPosition(15)
-					if e {
+					switch e {
+					case Disabled:
+						d.screen.Write(" ")
+					case LowVolume:
 						d.screen.Write(string(byte(0)))
 						d.screen.SetCustomChar(0, bell)
-					} else {
-						d.screen.Write(" ")
+					case HighVolume:
+						d.screen.Write(string(byte(1)))
+						d.screen.SetCustomChar(1, bellloud)
 					}
 				case td := <-buzzTempDisabled:
 					screen.Home()
