@@ -70,6 +70,9 @@ func startMesTempAndHum(g grovepi.GrovePi, wg *sync.WaitGroup, quit <-chan struc
 					return
 				case <-time.After(5 * time.Minute):
 				}
+			} else {
+				// Give an extra millisecond to let other goroutines working as expected
+				time.Sleep(time.Millisecond)
 			}
 
 		}
