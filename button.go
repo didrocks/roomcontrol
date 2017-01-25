@@ -19,13 +19,13 @@ const (
 	// LONGPRESS button click
 	LONGPRESS
 
-	pin               = grovepi.D8
+	pinButton         = grovepi.D7
 	doubleClickTime   = time.Second
 	defaultResolution = 50 * time.Millisecond
 )
 
 func startButtonListener(g grovepi.GrovePi, wg *sync.WaitGroup, quit <-chan struct{}) (<-chan ButtonEvent, error) {
-	err := g.PinMode(pin, "input")
+	err := g.PinMode(pinButton, "input")
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func startButtonListener(g grovepi.GrovePi, wg *sync.WaitGroup, quit <-chan stru
 		for {
 			select {
 			case <-time.After(res):
-				val, err := g.DigitalRead(pin)
+				val, err := g.DigitalRead(pinButton)
 				if val == 1 {
 					// Can be first or second click.
 					if !inClick {

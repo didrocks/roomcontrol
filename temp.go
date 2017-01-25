@@ -12,6 +12,8 @@ import (
 // Our sensor is 1 degree celsius above real temperature.
 const tempOffset float32 = -1
 
+const pinDHT = grovepi.D8
+
 func startMesTempAndHum(g grovepi.GrovePi, wg *sync.WaitGroup, quit <-chan struct{}) (<-chan float32, <-chan float32) {
 	temps, hums := make(chan float32, 1), make(chan float32, 1)
 	wg.Add(1)
@@ -33,7 +35,7 @@ func startMesTempAndHum(g grovepi.GrovePi, wg *sync.WaitGroup, quit <-chan struc
 			default:
 			}
 
-			t, h, err := g.ReadDHT(grovepi.D4)
+			t, h, err := g.ReadDHT(pinDHT)
 			// Ignore invalid temp and humidity.
 			if err != nil {
 				continue
