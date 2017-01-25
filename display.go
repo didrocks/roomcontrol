@@ -86,8 +86,8 @@ func startDisplay(temps <-chan float32, humids <-chan float32, bEvents <-chan Bu
 					screen.Home()
 					d.screen.SetPosition(31)
 					if td {
-						d.screen.Write(string(byte(1)))
-						d.screen.SetCustomChar(1, clock)
+						d.screen.Write(string(byte(2)))
+						d.screen.SetCustomChar(2, clock)
 					} else {
 						d.screen.Write(" ")
 					}
