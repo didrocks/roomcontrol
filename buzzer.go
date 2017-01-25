@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -54,7 +53,6 @@ func startBuzzer(tempOK <-chan bool, bEvents <-chan ButtonEvent, g grovepi.Grove
 
 			select {
 			case tOK := <-tempOK:
-				fmt.Println(tOK)
 				if tOK {
 					if buzzOn {
 						buzz(g, Disabled, false)

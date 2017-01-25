@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -43,14 +44,14 @@ func main() {
 	tempListeners, t := newlistener(tempListeners)
 	humListeners, h := newlistener(humListeners)
 	if err := startInfluxDBLogger(t, h, wg, quit); err != nil {
-		log.Printf("InfluxDB connect: %v", err)
+		fmt.Printf("InfluxDB connect: %v", err)
 		return
 	}
 
 	// Listen on button.
 	bEvents, err := startButtonListener(g, wg, quit)
 	if err != nil {
-		log.Printf("Connect to button error: %v", err)
+		fmt.Printf("Connect to button error: %v", err)
 		return
 	}
 
