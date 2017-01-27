@@ -86,7 +86,10 @@ func main() {
 				}
 			case e := <-bEvents:
 				for _, l := range buttonListeners {
-					l <- e
+					// do not block on sending button events to long goroutines (like the one taking 1000 temperature snapshots)
+					go func(l chan ButtonEvent) {
+						l <- e
+					}(l)
 				}
 			case <-quit:
 				return
