@@ -10,7 +10,7 @@ import (
 )
 
 // Our sensor is 1 degree celsius above real temperature.
-const tempOffset float32 = -1
+const tempOffset float32 = -0.7
 
 const pinDHT = grovepi.D8
 
